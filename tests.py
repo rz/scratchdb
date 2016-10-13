@@ -25,13 +25,14 @@ class FileStorageTest(unittest.TestCase):
         fs.close()
 
     def test_init_does_not_truncate(self):
-        with open(self.filename, 'w') as f:
-            f.write('test')
+        content = b'test\x00'
+        with open(self.filename, 'bw') as f:
+            f.write(content)
         fs = scratchdb.FileStorage(self.filename)
         fs.close()
-        with open(self.filename) as f:
-            contents = f.read()
-        self.assertEqual(contents, 'test')
+        with open(self.filename, 'br') as f:
+            actual_content = f.read()
+        self.assertEqual(actual_content, content)
 
     def test_init_opens_file(self):
         fs = scratchdb.FileStorage(self.filename)
@@ -42,6 +43,13 @@ class FileStorageTest(unittest.TestCase):
         fs = scratchdb.FileStorage(self.filename)
         fs.close()
         self.assertTrue(fs._f.closed)
+
+    def test_init_zeroes_end(self):
+        fs = scratchdb.FileStorage(self.filename)
+        fs.close()
+        with open(self.filename, 'br') as f:
+            content = f.read()
+        self.assertTrue(content.endswith(b'\x00'))
 
 
 if __name__ == '__main__':
