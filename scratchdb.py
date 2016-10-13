@@ -27,10 +27,14 @@ class FileStorage(object):
             if last_byte != b'\x00':
                 self._zero_end(128)
 
-    # internal methods
+    # methods that interact with the file itself ie the wrapper around it
     def _seek(self, offset, whence=0):
         """Wrapper around File.seek() for consistency."""
         return self._f.seek(offset, whence)
+
+    def _seek_start(self):
+        """Moves the stream position to the beginning of the file and returns that address."""
+        return self._f.seek(0, os.SEEK_SET)
 
     def _seek_end(self):
         """Moves the stream position to the end of file and returns that address."""
@@ -50,10 +54,21 @@ class FileStorage(object):
         self._f.flush()
         return addr
 
+    # internal utility methods
     def _zero_end(self, n=1):
         """Writes zero bytes at the end of the file."""
         self._seek_end()
         self._write(b'\x00'* self.INTEGER_LENGTH * n)
+
+    def _read_integer(self):
+        """Reads an integer from the file at the current stream position."""
+        bs = self._read(self.INTEGER_LENGTH)
+        return struct.unpack(self.INTEGER_FORMAT, bs)[0]  # struct.unpack always returns a tuple
+
+    def _write_integer(self, n):
+        """Writes an integer to the file at the current stream position."""
+        bs = struct.pack(self.INTEGER_FORMAT, n)
+        self._write(bs)
 
     # the external api
     def read(self, address):
