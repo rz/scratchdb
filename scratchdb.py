@@ -23,16 +23,28 @@ class FileStorage(object):
         self._zero_end()
 
     # methods that interact with the file itself ie the wrapper around it
+    def _tell(self):
+        """Wrapper around File.tell(). Returns the current stream position."""
+        return self._f.tell()
+
     def _seek(self, offset, whence=0):
-        """Wrapper around File.seek() for consistency."""
+        """
+        Wrapper around File.seek(). Moves the stream position to the
+        indicated offset.
+        """
         return self._f.seek(offset, whence)
 
     def _seek_start(self):
-        """Moves the stream position to the beginning of the file and returns that address."""
+        """
+        Moves the stream position to the beginning of the file and returns
+        that address.
+        """
         return self._f.seek(0, os.SEEK_SET)
 
     def _seek_end(self):
-        """Moves the stream position to the end of file and returns that address."""
+        """
+        Moves the stream position to the end of file and returns that address.
+        """
         return self._f.seek(0, os.SEEK_END)
 
     def _is_empty(self):
@@ -40,11 +52,17 @@ class FileStorage(object):
         return end_address == 0
 
     def _read(self, n):
-        """Wrapper around File.read() for consistency."""
+        """
+        Wrapper around File.read() Reads n bytes starting from the current
+        stream position.
+        """
         return self._f.read(n)
 
     def _write(self, bs):
-        """Wrapper around File.write() for consistency."""
+        """
+        Wrapper around File.write(). Writes the data to the file which should
+        be an iterable of bytes.
+        """
         addr = self._f.write(bs)
         self._f.flush()
         return addr
@@ -75,12 +93,63 @@ class FileStorage(object):
         bs = struct.pack(self.INTEGER_FORMAT, n)
         self._write(bs)
 
+    def _read_integer_and_rewind(self):
+        """
+        Reads an integer from the file at the current stream position and
+        leaves the current stream position unchanged.
+        """
+        n = self._read_integer()
+        self._seek(-self.INTEGER_LENGTH, os.SEEK_CUR)
+        return n
+
+    def _write_formatted(self, data):
+        """
+        Writes an int with the length of the data followed by the data at the
+        current stream position.
+        """
+        addr = self._tell()
+        length = len(data) + self.INTEGER_LENGTH
+        self._write_integer(length)
+        self._write(data)
+        return addr
+
+    def _seek_formatted_data_end(self, start_at=0):
+        """
+        Moves the current stream position to the end of the data after start_at.
+
+        Assumes that start_at is the starting position of formatted data ie that
+        reading that address yields an integer with the length of the data that
+        follows.
+        """
+        self._seek(start_at)
+        length = self._read_integer_and_rewind()
+        while length > 0:
+            self._seek(length, os.SEEK_CUR)
+            length = self._read_integer_and_rewind()
+
     # the external api
     def read(self, address):
-        pass
+        """
+        Reads the data at the given address.
+
+        Returns None if the address is past the end of the data on file.
+        """
+        self._seek(address)
+        data_length = self._read_integer()
+        if data_length == 0:
+            return None
+        data = self._read(data_length - self.INTEGER_LENGTH)
+        return data
 
     def append(self, data):
-        pass
+        """
+        Writes the data at the end of the file. Returns the address of the data
+        in the file.
+        """
+        self._seek_formatted_data_end()
+        last_address = self._write_formatted(data)
+        self._zero_end()
+        return last_address
 
     def close(self):
         self._f.close()
