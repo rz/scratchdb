@@ -3,7 +3,17 @@
 
 # The physical layer
 class FileStorage(object):
-    pass
+    def __init__(self, filename):
+        pass
+
+    # internal methods go here
+
+    # the external api
+    def read(self, address):
+        pass
+
+    def append(self, data):
+        pass
 
 
 # The logical layer
