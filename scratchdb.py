@@ -4,7 +4,12 @@
 # The physical layer
 class FileStorage(object):
     def __init__(self, filename):
-        pass
+        # never truncate the file if it exists
+        try:
+            f = open(filename, 'bx+')  # x mode raises an exception if the file exists, see https://docs.python.org/3/library/functions.html#open
+        except FileExistsError:
+            f = open(filename, 'r+b')
+        self._f = f
 
     # internal methods go here
 
@@ -14,6 +19,9 @@ class FileStorage(object):
 
     def append(self, data):
         pass
+
+    def close(self):
+        self._f.close()
 
 
 # The logical layer
