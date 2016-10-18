@@ -1,0 +1,3 @@
+- FileStorage uses temp files
+- FileStorage asserts on private attirbutes
+
