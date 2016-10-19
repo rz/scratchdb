@@ -73,5 +73,37 @@ class FileStorageTest(unittest.TestCase):
         self.assertEqual(2, content.count(data))
 
 
+class LogicalTest(unittest.TestCase):
+    def setUp(self):
+        self.dbname = '__testdb'
+        self.delete_files()
+        self.instance = scratchdb.Logical(self.dbname)
+
+    def tearDown(self):
+        self.instance.close_storage()
+        self.delete_files()
+
+    def delete_files(self):
+        for ext in ['.keys', '.values']:
+            filename = self.dbname + ext
+            try:
+                os.remove(filename)
+            except FileNotFoundError:
+                pass
+
+    def test_init_opens_storage(self):
+        keys_storage = self.instance._keys_storage
+        values_storage = self.instance._values_storage
+        self.assertTrue(keys_storage.is_open)
+        self.assertTrue(values_storage.is_open)
+
+    def test_close_storage(self):
+        keys_storage = self.instance._keys_storage
+        values_storage = self.instance._values_storage
+        self.instance.close_storage()
+        self.assertFalse(keys_storage.is_open)
+        self.assertFalse(values_storage.is_open)
+
+
 if __name__ == '__main__':
     unittest.main()
