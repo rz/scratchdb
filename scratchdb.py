@@ -73,6 +73,9 @@ class FileStorage(object):
         self._f.flush()
         return addr
 
+    def _is_closed(self):
+        return self._f.closed
+
     # internal utility methods
     def _zero_end(self, n=1):
         """Writes zero bytes at the end of the file."""
@@ -154,10 +157,24 @@ class FileStorage(object):
     def close(self):
         self._f.close()
 
+    @property
+    def is_open(self):
+        return not self.is_closed
+
+    @property
+    def is_closed(self):
+        return self._is_closed()
+
 
 # The logical layer
 class Logical(object):
-    pass
+    def __init__(self, dbname):
+        self._keys_storage = FileStorage(dbname + '.keys')
+        self._values_storage = FileStorage(dbname + '.values')
+
+    def close_storage(self):
+        self._keys_storage.close()
+        self._values_storage.close()
 
 
 # The database API
