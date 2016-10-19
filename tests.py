@@ -131,9 +131,44 @@ class LogicalTest(unittest.TestCase):
         with self.assertRaises(KeyError):
             self.instance.get('testkey')
 
+    def test_multi_set_get_pop(self):
+        expected = {
+            'key1': 'val1',
+            'key2': 'val2',
+            'foo': 3,
+            'fool': 4,
+            'fools': 5,
+            'dict': {1:10, 2:20, 3:30},
+            'list': [1, 2, 3],
+            (1, 3): 'foo',
+            (1, 4): 'fool',
+            (1, 5): 'fools',
+        }
+        for key, val in expected.items():
+            self.instance.set(key, val)
+
+        with self.assertRaises(KeyError):
+            self.instance.get('not-there')
+
+        for key, expected_value in expected.items():
+            self.assertEqual(expected_value, self.instance.get(key))
+
+        self.instance.set('foo', 30)
+        self.instance.pop('fool')
+
+        self.assertEqual(30, self.instance.get('foo'))
+        with self.assertRaises(KeyError):
+            self.instance.get('fool')
+
+        expected['foo'] = 30
+        expected.pop('fool')
+        for key, expected_value in expected.items():
+            self.assertEqual(expected_value, self.instance.get(key))
+
     def tearDown(self):
         self.instance.close_storage()
         self.delete_files()
+
 
 if __name__ == '__main__':
     unittest.main()
