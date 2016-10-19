@@ -1,5 +1,7 @@
 import os
+import pickle
 import unittest
+from unittest import mock
 
 import scratchdb
 
@@ -99,6 +101,26 @@ class LogicalTest(unittest.TestCase):
         self.instance.close_storage()
         self.assertFalse(keys_storage.is_open)
         self.assertFalse(values_storage.is_open)
+
+    def test_set(self):
+        self.instance.set('testkey', 'testvalue')
+        # the storage should be empty before we start, so both the key and the
+        # value should be at address 0 of their respective storage
+        expected_key_bytes = pickle.dumps(('testkey', 0))
+        expected_value_bytes = pickle.dumps('testvalue')
+        actual_key_bytes = self.instance._keys_storage.read(0)
+        actual_value_bytes = self.instance._values_storage.read(0)
+        self.assertEqual(expected_key_bytes, actual_key_bytes)
+        self.assertEqual(expected_value_bytes, actual_value_bytes)
+
+    def test_pop(self):
+        self.instance.pop('testkey')
+        # the storage should be empty before we start, so both the key and the
+        # value should be at address 0 of their respective storage
+        expected_key_bytes = pickle.dumps(('testkey', None))
+        actual_key_bytes = self.instance._keys_storage.read(0)
+        self.assertEqual(expected_key_bytes, actual_key_bytes)
+        self.assertIsNone(self.instance._values_storage.read(0))
 
     def tearDown(self):
         self.instance.close_storage()

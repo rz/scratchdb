@@ -1,6 +1,7 @@
 ### A simple key-value database that supports set, get, and pop operations.
 
 import os
+import pickle
 import struct
 
 
@@ -172,9 +173,29 @@ class Logical(object):
         self._keys_storage = FileStorage(dbname + '.keys')
         self._values_storage = FileStorage(dbname + '.values')
 
+    def _insert(self, key, value, for_deletion=False):
+        if not for_deletion:
+            value_data = pickle.dumps(value)
+            value_address = self._values_storage.append(value_data)
+        else:
+            value_address = None
+        key_tuple = (key, value_address)
+        key_data = pickle.dumps(key_tuple)
+        key_address = self._keys_storage.append(key_data)
+
+    def set(self, key, value):
+        return self._insert(key, value, for_deletion=False)
+
+    def get(self, key):
+        pass
+
+    def pop(self, key):
+        return self._insert(key, value=None, for_deletion=True)
+
     def close_storage(self):
         self._keys_storage.close()
         self._values_storage.close()
+
 
 
 # The database API
