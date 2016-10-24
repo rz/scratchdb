@@ -207,5 +207,51 @@ class ScratchDBAPITest(unittest.TestCase):
         self.db.close()
         self.delete_files()
 
+
+class QueryProcessorTest(unittest.TestCase):
+    def setUp(self):
+        self.dbname = '__testdb'
+        self.delete_files()
+        self.db = scratchdb.ScratchDB(self.dbname)
+        self.qp = scratchdb.QueryProcessor(self.db)
+
+    def delete_files(self):
+        for ext in ['.keys', '.values']:
+            filename = self.dbname + ext
+            try:
+                os.remove(filename)
+            except FileNotFoundError:
+                pass
+
+    def test_invalid_comand(self):
+        cmd_str = 'not (1,"bit") {"valid":False}'
+        actual = self.qp.execute(cmd_str)
+        self.assertTrue(actual.startswith('Invalid query.'))
+
+    def test_get_valid(self):
+        key = (1, 10)
+        value = [1, 2, 3]
+        self.db.set(key, value)
+
+        cmd_str = 'get (1,10)'
+        actual = self.qp.execute(cmd_str)
+        expected = '<list>: [1, 2, 3]'
+        self.assertEqual(actual, expected)
+
+    def test_get_valid_nonexistent(self):
+        cmd_str = 'get nonexistent'
+        actual = self.qp.execute(cmd_str)
+        self.assertTrue(actual.startswith('Key not found'))
+
+    def test_get_invalid_extra_args(self):
+        cmd_str = 'get foo bar'
+        actual = self.qp.execute(cmd_str)
+        self.assertTrue(actual.startswith('Invalid query. get should only have one argument'))
+
+    def tearDown(self):
+        self.db.close()
+        self.delete_files()
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -4,4 +4,8 @@
 - LogicalTest.test_set() and test_pop() use a very fragile approach
 - data format / implementation of logical layer requires requires reading all
   keys to memory and/or exposing extra methods in FileStorage next_address()
-
+- code repetition in tests.py: delete_files()
+- structure of QueryProcessor.execute() makes it difficult to unit test
+  the various pieces of functionality it needs.
+- spec for QueryProcessor.execute() prevents it from throwing exceptions
+  when errors occur.

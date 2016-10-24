@@ -1,5 +1,6 @@
 ### A simple key-value database that supports set, get, and pop operations.
 
+import ast
 import os
 import pickle
 import struct
@@ -257,7 +258,47 @@ class ScratchDB(object):
 
 
 class QueryProcessor(object):
-    pass
+    def __init__(self, db):
+        self._db = db
+
+    def _validate_cmd(self, s):
+        return s in ['set', 'get', 'pop']
+
+    def _to_python(self, s):
+        try:
+            pyval = ast.literal_eval(s)
+        except (SyntaxError, ValueError):
+            pyval = str(s)
+        return pyval
+
+    def _format(self, v):
+        return '<%s>: %s' % (type(v).__name__, v)
+
+    def _handle_get(self, key_string):
+        key = self._to_python(key_string)
+        try:
+            val = self._db.get(key)
+        except KeyError:
+            return 'Key not found: %s' % key_string
+        return self._format(val)
+
+    def execute(self, user_input):
+        """
+        Accepts a string as provided by the user and returns the output that
+        should be displayed. The return value is a string with the result of
+        the query or an error message.
+        """
+        cmd, key_string, *args = user_input.split()
+        if not self._validate_cmd(cmd):
+            return 'Invalid query. %s is not a ScratchDB command.' % cmd
+        if cmd == 'get':
+            if args:
+                return 'Invalid query. get should only have one argument, the key to get.'
+            return self._handle_get(key_string)
+        elif cmd == 'set':
+            raise NotImplementedError
+        elif cmd == 'pop':
+            raise NotImplementedError
 
 
 class Client(object):
