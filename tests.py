@@ -170,5 +170,42 @@ class LogicalTest(unittest.TestCase):
         self.delete_files()
 
 
+class ScratchDBAPITest(unittest.TestCase):
+    def setUp(self):
+        self.dbname = '__testdb'
+        self.delete_files()
+        self.db = scratchdb.ScratchDB(self.dbname)
+
+    def delete_files(self):
+        for ext in ['.keys', '.values']:
+            filename = self.dbname + ext
+            try:
+                os.remove(filename)
+            except FileNotFoundError:
+                pass
+
+    def test_set_get(self):
+        key = (1, 10)
+        value = {'name': 'John Jones', 'age': 35}
+        self.db.set(key, value)
+        self.assertEqual(self.db.get(key), value)
+
+    def test_get_nonexistent(self):
+        with self.assertRaises(KeyError):
+            self.db.get('nonexistentkey')
+
+    def test_set_pop(self):
+        key = (1, 10)
+        value = 'John Jones is 35 years old.'
+        self.db.set(key, value)
+
+        self.db.pop(key)
+        with self.assertRaises(KeyError):
+            self.db.get(key)
+
+    def tearDown(self):
+        self.db.close()
+        self.delete_files()
+
 if __name__ == '__main__':
     unittest.main()

@@ -224,7 +224,7 @@ class Logical(object):
                 else:
                     value_data = self._values_storage.read(value_address)
         if value_data is None:
-            raise KeyError('Key %s not found' % key)
+            raise KeyError('Key %s not found' % str(key))
         return pickle.loads(value_data)
 
     def set(self, key, value):
@@ -238,10 +238,22 @@ class Logical(object):
         self._values_storage.close()
 
 
-
 # The database API
 class ScratchDB(object):
-    pass
+    def __init__(self, dbname):
+        self.ds = Logical(dbname)
+
+    def get(self, key):
+        return self.ds.get(key)
+
+    def set(self, key, value):
+        return self.ds.set(key, value)
+
+    def pop(self, key):
+        return self.ds.pop(key)
+
+    def close(self):
+        return self.ds.close_storage()
 
 
 class QueryProcessor(object):
