@@ -4,6 +4,7 @@ import ast
 import os
 import pickle
 import struct
+import sys
 
 
 # The physical layer
@@ -317,5 +318,31 @@ class QueryProcessor(object):
 
 
 class Client(object):
-    pass
+    def __init__(self):
+        args = sys.argv[1:]
+        if len(args) != 1:
+            self.print_usage()
+            sys.exit()
+        dbname = args[0]
+        self._db = ScratchDB(dbname)
+        self._qp = QueryProcessor(self._db)
+
+    def run_repl(self):
+         print('Use Ctrl-D to exit.')
+         while True:
+             try:
+                user_input = input('[scratchdb]=> ')
+                output = self._qp.execute(user_input)
+                print('  ' + output)
+             except (EOFError, KeyboardInterrupt):
+                sys.exit()
+
+    def print_usage(self):
+        print('Usage: python scratchdb <database name>.')
+        print('Necessary files will be created if they do not exist.')
+
+
+if __name__ == '__main__':
+    client = Client()
+    client.run_repl()
 
