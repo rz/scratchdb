@@ -10,3 +10,7 @@
   the various pieces of functionality it needs.
 - spec for QueryProcessor.execute() prevents it from throwing exceptions
   when errors occur.
+- 2-file design makes it cumbersome for the client to document what files
+  will be created given a database name
+- no tests for client
+
