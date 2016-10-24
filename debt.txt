@@ -1,4 +1,4 @@
-- FileStorageTest and LogicalTest use temp files
+- tests use temp files
 - FileStorage and LogicalTest assert on private attirbutes
 - serialization is coupled to the logical layer
 - popping a non-existent key adds that key to the keys file
