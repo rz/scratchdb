@@ -150,11 +150,10 @@ class FileStorage(object):
         """
         self._seek_formatted_data_end()
         self._last_address = self._write_formatted(data)
-
-        self._seek(-1, os.SEEK_END)
-        last_byte = self._read(1)
-        if last_byte != b'\x00':
-            self._zero_end(128)
+        self._seek(-self.INTEGER_LENGTH, os.SEEK_END)
+        last_bytes = self._read(self.INTEGER_LENGTH)
+        if any([byte != b'\x00' for byte in last_bytes]):
+            self._zero_end()
         return self._last_address
 
     def close(self):

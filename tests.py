@@ -74,6 +74,19 @@ class FileStorageTest(unittest.TestCase):
             content = f.read()
         self.assertEqual(2, content.count(data))
 
+    def test_mis_aligned_end_bug(self):
+        fs = scratchdb.FileStorage(self.filename)
+        # on initialization 128 x INTEGER_LENGTH zero-bytes are written to the file
+        # since we use INTEGER_LENGTH bytes to store the size of the data, data of
+        # size 127 * INTEGER_LENGTH would line perfectly with the 0s, to create
+        # the mis-alignment we write one fewer byte than that. then the file looks
+        # like <size><data><single zero-byte>
+        data = b'\xff' * (127 * fs.INTEGER_LENGTH - 1)
+        fs.append(data)
+        # this append causes the bug in the original implementation
+        fs.append(b'\xff')
+        fs.close()
+
 
 class LogicalTest(unittest.TestCase):
     def setUp(self):
@@ -202,6 +215,10 @@ class ScratchDBAPITest(unittest.TestCase):
         self.db.pop(key)
         with self.assertRaises(KeyError):
             self.db.get(key)
+
+    def test_multi_set(self):
+        for i in range(500):
+            self.db.set(i, hex(i))
 
     def tearDown(self):
         self.db.close()
