@@ -271,6 +271,33 @@ class QueryProcessorTest(unittest.TestCase):
         actual = self.qp.execute(cmd_str)
         self.assertTrue(actual.startswith('Invalid query. pop should only have one argument'))
 
+    def test_set_valid(self):
+        cmd_str = 'set (1,10) [1, 2, 3]'
+        actual = self.qp.execute(cmd_str)
+        expected = 'Set key <tuple>: (1, 10) to <list>: [1, 2, 3]'
+        self.assertEqual(actual, expected)
+
+    def test_set_invalid_missing_args(self):
+        cmd_str = 'set key'
+        actual = self.qp.execute(cmd_str)
+        self.assertTrue(actual.startswith('Invalid query. set should have 2 arguments'))
+
+    def test_set_valid_invalid_python_type_becomes_string(self):
+        cmd_str = 'set (foo,1} {1,2;3]'
+        actual = self.qp.execute(cmd_str)
+        self.assertTrue(actual.startswith('Set key'))
+        expected_key = '(foo,1}'
+        expected_value = '{1,2;3]'
+        self.assertEqual(self.db.get(expected_key), expected_value)
+
+    def test_set_valid_space_in_key_becomes_string(self):
+        cmd_str = 'set (1, 10) [1, 2, 3]'
+        actual = self.qp.execute(cmd_str)
+        self.assertTrue(actual.startswith('Set key'))
+        expected_key = '(1,'
+        expected_value = '10)[1,2,3]'
+        self.assertEqual(self.db.get(expected_key), expected_value)
+
 
 if __name__ == '__main__':
     unittest.main()
