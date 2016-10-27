@@ -13,4 +13,5 @@
 - 2-file design makes it cumbersome for the client to document what files
   will be created given a database name
 - no tests for client
+- get operation is very slow
 
