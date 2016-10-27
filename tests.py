@@ -125,6 +125,15 @@ class LogicalTest(unittest.TestCase):
         self.assertEqual(expected_key_bytes, actual_key_bytes)
         self.assertIsNone(self.instance._values_storage.read(0))
 
+    def test_get(self):
+        self.instance.set('testkey', 'testvalue')
+        actual_value = self.instance.get('testkey')
+        self.assertEqual('testvalue', actual_value)
+
+    def test_get_non_existent(self):
+        with self.assertRaises(KeyError):
+            self.instance.get('testkey')
+
 
 if __name__ == '__main__':
     unittest.main()
