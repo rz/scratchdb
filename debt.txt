@@ -3,4 +3,6 @@
 - serialization is coupled to the logical layer
 - popping a non-existent key adds that key to the keys file
 - LogicalTest.test_set() and test_pop() use a very fragile approach
+- data format / implementation of logical layer requires requires reading all
+  keys to memory and/or exposing extra methods in FileStorage next_address()
 

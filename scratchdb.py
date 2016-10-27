@@ -166,12 +166,39 @@ class FileStorage(object):
     def is_closed(self):
         return self._is_closed()
 
+    def next_address(self, address):
+        """
+        Returns the address of the first piece of data after address or None if
+        there is no data past the address.
+        """
+        self._seek_start()
+        length = self._read_integer_and_rewind()
+        read_address = 0
+        while read_address <= address and length > 0:
+            length = self._read_integer_and_rewind()
+            self._seek(length, os.SEEK_CUR)
+            read_address += length
+        if read_address == address:
+            return None
+        return read_address
+
 
 # The logical layer
 class Logical(object):
     def __init__(self, dbname):
         self._keys_storage = FileStorage(dbname + '.keys')
         self._values_storage = FileStorage(dbname + '.values')
+
+    def _read_keys(self):
+        keys = []
+        address = 0
+        while address is not None:
+            key_data = self._keys_storage.read(address)
+            if key_data is not None:
+                key = pickle.loads(key_data)
+                keys.append(key)
+            address = self._keys_storage.next_address(address)
+        return keys
 
     def _insert(self, key, value, for_deletion=False):
         if not for_deletion:
@@ -183,11 +210,25 @@ class Logical(object):
         key_data = pickle.dumps(key_tuple)
         key_address = self._keys_storage.append(key_data)
 
+    def get(self, key):
+        # the key_data type is determined in _insert(), it's a tuple:
+        # (key, value_address)
+        # note that we do updates by inserting another copy of the key.
+        # this means that to retrieve the key we have to look at all of them
+        keys = self._read_keys()
+        value_data = None
+        for k, value_address in keys:
+            if k == key:
+                if value_address is None:
+                    value_data = None
+                else:
+                    value_data = self._values_storage.read(value_address)
+        if value_data is None:
+            raise KeyError('Key %s not found' % key)
+        return pickle.loads(value_data)
+
     def set(self, key, value):
         return self._insert(key, value, for_deletion=False)
-
-    def get(self, key):
-        pass
 
     def pop(self, key):
         return self._insert(key, value=None, for_deletion=True)
