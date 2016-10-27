@@ -252,6 +252,25 @@ class QueryProcessorTest(unittest.TestCase):
         actual = self.qp.execute(cmd_str)
         self.assertTrue(actual.startswith('Invalid query. get should only have one argument'))
 
+    def test_pop_valid(self):
+        key = (1,10)
+        value = {'name': 'John Jones', 'age': 37}
+        self.db.set(key, value)
+
+        cmd_str = 'pop (1,10)'
+        actual = self.qp.execute(cmd_str)
+        self.assertTrue(actual.startswith('Key popped'))
+
+    def test_pop_valid_nonexistent(self):
+        cmd_str = 'pop nonexistent'
+        actual = self.qp.execute(cmd_str)
+        self.assertTrue(actual.startswith('Key popped'))
+
+    def test_pop_invalid_extra_args(self):
+        cmd_str = 'pop foo bar baz'
+        actual = self.qp.execute(cmd_str)
+        self.assertTrue(actual.startswith('Invalid query. pop should only have one argument'))
+
 
 if __name__ == '__main__':
     unittest.main()

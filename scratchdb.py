@@ -282,6 +282,11 @@ class QueryProcessor(object):
             return 'Key not found: %s' % key_string
         return self._format(val)
 
+    def _handle_pop(self, key_string):
+        key = self._to_python(key_string)
+        self._db.pop(key)
+        return 'Key popped: %s' % key_string
+
     def execute(self, user_input):
         """
         Accepts a string as provided by the user and returns the output that
@@ -298,8 +303,9 @@ class QueryProcessor(object):
         elif cmd == 'set':
             raise NotImplementedError
         elif cmd == 'pop':
-            raise NotImplementedError
-
+            if args:
+                return 'Invalid query. pop should only have one argument, the key to pop.'
+            return self._handle_pop(key_string)
 
 class Client(object):
     pass
