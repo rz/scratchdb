@@ -23,13 +23,7 @@ class FileStorage(object):
         self._f = f
 
         # ensure there are zero bytes at the end of the file
-        if self._is_empty():
-            self._zero_end(128)
-        else:
-            self._seek(-1, os.SEEK_END)
-            last_byte = self._read(1)
-            if last_byte != b'\x00':
-                self._zero_end(128)
+        self._zero_end()
 
     # methods that interact with the file itself ie the wrapper around it
     def _tell(self):
@@ -80,10 +74,20 @@ class FileStorage(object):
         return self._f.closed
 
     # internal utility methods
-    def _zero_end(self, n=1):
-        """Writes zero bytes at the end of the file."""
-        self._seek_end()
-        self._write(b'\x00'* self.INTEGER_LENGTH * n)
+    def _zero_end(self):
+        """
+        Writes zero bytes at the end of the file so that reading a 0 integer at
+        the end will succeed.
+        """
+        if self._is_empty() or self._seek_end() < self.INTEGER_LENGTH:
+            self._seek_end()
+            self._write(b'\x00' * self.INTEGER_LENGTH)
+        else:
+            self._seek(-self.INTEGER_LENGTH, os.SEEK_END)
+            last_bytes = self._read(self.INTEGER_LENGTH)
+            if any([byte != b'\x00' for byte in last_bytes]):
+                self._seek_end()
+                self._write(b'\x00' * self.INTEGER_LENGTH)
 
     def _read_integer(self):
         """Reads an integer from the file at the current stream position."""
@@ -150,10 +154,7 @@ class FileStorage(object):
         """
         self._seek_formatted_data_end()
         self._last_address = self._write_formatted(data)
-        self._seek(-self.INTEGER_LENGTH, os.SEEK_END)
-        last_bytes = self._read(self.INTEGER_LENGTH)
-        if any([byte != b'\x00' for byte in last_bytes]):
-            self._zero_end()
+        self._zero_end()
         return self._last_address
 
     def close(self):

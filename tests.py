@@ -34,7 +34,7 @@ class FileStorageTest(unittest.TestCase):
         fs.close()
         with open(self.filename, 'br') as f:
             actual_content = f.read()
-        self.assertEqual(actual_content, content)
+        self.assertTrue(actual_content.startswith(content))
 
     def test_init_opens_file(self):
         fs = scratchdb.FileStorage(self.filename)
