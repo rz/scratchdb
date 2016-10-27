@@ -282,6 +282,12 @@ class QueryProcessor(object):
             return 'Key not found: %s' % key_string
         return self._format(val)
 
+    def _handle_set(self, key_string, args):
+        key = self._to_python(key_string)
+        value = self._to_python(''.join(args))
+        self._db.set(key, value)
+        return 'Set key %s to %s' % (self._format(key), self._format(value))
+
     def _handle_pop(self, key_string):
         key = self._to_python(key_string)
         self._db.pop(key)
@@ -301,11 +307,14 @@ class QueryProcessor(object):
                 return 'Invalid query. get should only have one argument, the key to get.'
             return self._handle_get(key_string)
         elif cmd == 'set':
-            raise NotImplementedError
+            if not args:
+                return 'Invalid query. set should have 2 arguments, the key to set and the value to set it to.'
+            return self._handle_set(key_string, args)
         elif cmd == 'pop':
             if args:
                 return 'Invalid query. pop should only have one argument, the key to pop.'
             return self._handle_pop(key_string)
+
 
 class Client(object):
     pass
