@@ -171,18 +171,16 @@ class FileStorage(object):
     def next_address(self, address):
         """
         Returns the address of the first piece of data after address or None if
-        there is no data past the address.
+        there is no data past the address. Assumes that address is the address
+        of a piece of data (as returned by .read() for example) and not an
+        address that may point to the middle of a piece of data.
         """
-        self._seek_start()
+        self._seek(address)
         length = self._read_integer_and_rewind()
-        read_address = 0
-        while read_address <= address and length > 0:
-            length = self._read_integer_and_rewind()
-            self._seek(length, os.SEEK_CUR)
-            read_address += length
-        if read_address == address:
+        if length == 0:
             return None
-        return read_address
+        else:
+            return address + length
 
 
 # The logical layer
