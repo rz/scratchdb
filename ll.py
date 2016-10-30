@@ -27,6 +27,14 @@ class LogicalLinkedList(object):
     def __init__(self):
         self._storage = MemoryStorage()
 
+    def _get_head_node(self):
+        head_address = self._storage.get_head_address()
+        if head_address == 0:
+            head = None
+        else:
+            head = self._storage.read(head_address)
+        return head
+
     def _ll_insert(self, node, key, value_address):
         if node is None:
             # inserting on an empty list
@@ -72,10 +80,7 @@ class LogicalLinkedList(object):
             value_tuple = ('value', value)  # so that it is easy to identify them when inspecting the storage
             value_address = self._storage.append(value_tuple)
         head_address = self._storage.get_head_address()
-        if head_address == 0:
-            head = None
-        else:
-            head = self._storage.read(head_address)
+        head = self._get_head_node()
         new_head_address = self._ll_insert(head, key, value_address)
         self._storage.set_head_address(new_head_address)
         return new_head_address
@@ -90,12 +95,8 @@ class LogicalLinkedList(object):
         return self._insert(key, value=None, for_deletion=True)
 
     def show(self):
-        head_address = self._storage.get_head_address()
-        if head_address == 0:
-            node = None
-        else:
-            node = self._storage.read(head_address)
         result_str = ''
+        node = self._get_head_node()
         while node is not None:
             _, key, value_address, next_address = node
             if value_address is None:
@@ -108,7 +109,7 @@ class LogicalLinkedList(object):
             else:
                 node = self._storage.read(next_address)
         print('list: %s' % result_str)
-        print('head address: %s' % head_address)
+        print('head address: %s' % self._storage.get_head_address())
         print('storage:')
         self._storage.show()
 
