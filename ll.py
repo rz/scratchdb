@@ -86,7 +86,16 @@ class LogicalLinkedList(object):
         return new_head_address
 
     def get(self, key):
-        pass
+        node = self._get_head_node()
+        while node is not None:
+            _, node_key, value_address, next_address = node
+            if node_key == key:
+                if value_address is None:
+                    raise KeyError('Not found: %s' % key)
+                _, value = self._storage.read(value_address)
+                return value
+            node = self._storage.read(next_address)
+        raise KeyError('Not found: %s' % key)
 
     def set(self, key, value):
         return self._insert(key, value, for_deletion=False)
