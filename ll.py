@@ -73,15 +73,58 @@ class LogicalLinkedList(object):
                 new_node_address = self._storage.append(new_node)
                 return new_node_address
 
-    def _insert(self, key, value, for_deletion=False):
-        if for_deletion:
-            value_address = None
+    def _ll_remove(self, node, key):
+        if node is None:
+            # removing from an empty list, nothing to do
+            return 0
+        _, node_key, node_value_address, node_next_address = node
+        if node_next_address is None:
+            next_node = None
         else:
-            value_tuple = ('value', value)  # so that it is easy to identify them when inspecting the storage
-            value_address = self._storage.append(value_tuple)
+            next_node = self._storage.read(node_next_address)
+
+        if next_node is None:
+            if key == node_key:
+                # there is only 1 node and it is the one we need to remove
+                # we know there's only 1 node because this method operates
+                # by removing the next node, so we can only get here if
+                # next_node was None on the first call
+                return 0
+            else:
+                # we make a copy for uniformity and because we need to return
+                # the address of this node. if we had the address of this node
+                # we could just return that and in that case, when removing
+                # a non-existent key all but the last node would be copied
+                # this copies the last node
+                new_node = ('key', node_key, node_value_address, node_next_address)
+                new_node_address = self._storage.append(new_node)
+                return new_node_address
+        _, next_node_key, next_node_value_address, next_node_next_address = next_node
+        if key == next_node_key:
+            # the node we need to remove is next
+            new_node = ('key', node_key, node_value_address, next_node_next_address)
+            new_node_address = self._storage.append(new_node)
+            return new_node_address
+        else:
+            # recursive case, make a copy of the present node and recurse
+            new_next_node_address = self._ll_remove(next_node, key)
+            new_node = ('key', node_key, node_value_address, new_next_node_address)
+            new_node_address = self._storage.append(new_node)
+            return new_node_address
+
+    def _insert(self, key, value):
+        value_tuple = ('value', value)  # so that it is easy to identify them when inspecting the storage
+        value_address = self._storage.append(value_tuple)
         head_address = self._storage.get_head_address()
         head = self._get_head_node()
         new_head_address = self._ll_insert(head, key, value_address)
+        self._storage.set_head_address(new_head_address)
+        return new_head_address
+
+    def _remove(self, key):
+        head_address = self._storage.get_head_address()
+        head = self._get_head_node()
+        new_head_address = self._ll_remove(head, key)
         self._storage.set_head_address(new_head_address)
         return new_head_address
 
@@ -98,10 +141,10 @@ class LogicalLinkedList(object):
         raise KeyError('Not found: %s' % key)
 
     def set(self, key, value):
-        return self._insert(key, value, for_deletion=False)
+        return self._insert(key, value)
 
     def pop(self, key):
-        return self._insert(key, value=None, for_deletion=True)
+        return self._remove(key)
 
     def show(self):
         result_str = ''
