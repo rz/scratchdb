@@ -82,7 +82,18 @@ class LogicalLinkedList(object):
                 return new_node_address
 
     def get(self, key):
-        pass
+        node = self._get_head_node()
+        while node is not None:
+            if key == node.key:
+                if node.value_address is None:
+                    raise KeyError('Not found: %s' % key)
+                vw = self._storage.read(node.value_address)
+                return vw.value
+            if node.next_address is None:
+                node = None
+            else:
+                node = self._storage.read(node.next_address)
+        raise KeyError('Not found: %s' % key)
 
     def set(self, key, value):
         vw = ValueWrapper(value)
@@ -120,7 +131,18 @@ if __name__ == '__main__':
     for i in range(5):
         ll.set('k%s' %i, 'v%s' % i)
         ll.show()
+
+    for i in range(5):
+        print('get k%s:' % i, ll.get('k%s' % i))
+    print('getting non-existent:', end=' ')
+    try:
+        ll.get('DNE')
+    except KeyError as e:
+        print('got KeyError', e)
+
     print('updating k2 to new v2')
     ll.set('k2', 'new v2')
     ll.show()
+
+    print('get k2:', ll.get('k2'))
 
