@@ -81,6 +81,48 @@ class LogicalLinkedList(object):
                 new_node_address = self._storage.append(new_node)
                 return new_node_address
 
+    def _ll_remove(self, node, key):
+        if node is None:
+            # removing from an empty list, nothing to do
+            return 0
+        if node.next_address is None:
+            next_node = None
+        else:
+            next_node = self._storage.read(node.next_address)
+
+        if next_node is None:
+            if key == node.key:
+                # there is only 1 node and it is the one we need to remove
+                # we know there's only 1 node because this method operates
+                # by removing the next node, so we can only get here if
+                # next_node was None on the first call
+                return 0
+            else:
+                # we make a copy for uniformity and because we need to return
+                # the address of this node. if we had the address of this node
+                # we could just return that and in that case, when removing
+                # a non-existent key all but the last node would be copied
+                # this copies the last node
+                new_node = Node(node.key, node.value_address, node.next_address)
+                new_node_address = self._storage.append(new_node)
+                return new_node_address
+
+        if key == node.key:
+            # removing the head, we don't need to copy anything, just point to the right place
+            return node.next_address
+
+        if key == next_node.key:
+            # the node we need to remove is next
+            new_node = Node(node.key, node.value_address, next_node.next_address)
+            new_node_address = self._storage.append(new_node)
+            return new_node_address
+        else:
+            # recursive case, make a copy of the present node and recurse
+            new_next_node_address = self._ll_remove(next_node, key)
+            new_node = Node(node.key, node.value_address, new_next_node_address)
+            new_node_address = self._storage.append(new_node)
+            return new_node_address
+
     def get(self, key):
         node = self._get_head_node()
         while node is not None:
@@ -104,7 +146,10 @@ class LogicalLinkedList(object):
         return new_head_address
 
     def pop(self, key):
-        pass
+        head = self._get_head_node()
+        new_head_address = self._ll_remove(head, key)
+        self._storage.set_head_address(new_head_address)
+        return new_head_address
 
     def show(self):
         result_str = ''
@@ -145,4 +190,8 @@ if __name__ == '__main__':
     ll.show()
 
     print('get k2:', ll.get('k2'))
+
+    print('popping k2')
+    ll.pop('k2')
+    ll.show()
 
