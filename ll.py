@@ -84,7 +84,7 @@ class LogicalLinkedList(object):
     def _ll_remove(self, node, key):
         if node is None:
             # removing from an empty list, nothing to do
-            return 0
+            raise KeyError
         if node.next_address is None:
             next_node = None
         else:
@@ -98,14 +98,8 @@ class LogicalLinkedList(object):
                 # next_node was None on the first call
                 return 0
             else:
-                # we make a copy for uniformity and because we need to return
-                # the address of this node. if we had the address of this node
-                # we could just return that and in that case, when removing
-                # a non-existent key all but the last node would be copied
-                # this copies the last node
-                new_node = Node(node.key, node.value_address, node.next_address)
-                new_node_address = self._storage.append(new_node)
-                return new_node_address
+                # we are at the end and did not find the key, nothing to to
+                raise KeyError
 
         if key == node.key:
             # removing the head, we don't need to copy anything, just point to the right place
@@ -147,8 +141,12 @@ class LogicalLinkedList(object):
 
     def pop(self, key):
         head = self._get_head_node()
-        new_head_address = self._ll_remove(head, key)
-        self._storage.set_head_address(new_head_address)
+        try:
+            new_head_address = self._ll_remove(head, key)
+        except KeyError:
+            new_head_address = self._storage.get_head_address()
+        else:
+            self._storage.set_head_address(new_head_address)
         return new_head_address
 
     def show(self):
@@ -193,5 +191,9 @@ if __name__ == '__main__':
 
     print('popping k2')
     ll.pop('k2')
+    ll.show()
+
+    print('popping non-existent')
+    ll.pop('DNE')
     ll.show()
 
