@@ -95,3 +95,32 @@ class LogicalLinkedList(object):
     def pop(self, key):
         pass
 
+    def show(self):
+        result_str = ''
+        node = self._get_head_node()
+        while node is not None:
+            if node.value_address is None:
+                value = None
+            else:
+                value = self._storage.read(node.value_address)
+            result_str += '[%s value_addr:%s]-->' % (node.key, node.value_address)
+            if node.next_address is None:
+                node = None
+            else:
+                node = self._storage.read(node.next_address)
+        print('list: %s' % result_str)
+        print('head address: %s' % self._storage.get_head_address())
+        print('storage:')
+        self._storage.show()
+
+
+if __name__ == '__main__':
+    ll = LogicalLinkedList()
+    print('inserting 5 keys: k0,k1,k2,k3,k4')
+    for i in range(5):
+        ll.set('k%s' %i, 'v%s' % i)
+        ll.show()
+    print('updating k2 to new v2')
+    ll.set('k2', 'new v2')
+    ll.show()
+
