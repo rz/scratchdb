@@ -1,3 +1,6 @@
+from collections import namedtuple
+
+
 class MemoryStorage(object):
     def __init__(self):
         self._l = [0]
@@ -21,6 +24,12 @@ class MemoryStorage(object):
         elements_s = '\n'.join('{:4d}   {}'.format(i, elem) for i, elem in enumerate(self._l))
         print(header)
         print(elements_s)
+
+
+Node = namedtuple('Node', ['key', 'value_address', 'next_address'])
+
+
+ValueWrapper = namedtuple('V', ['value'])
 
 
 class LogicalLinkedList(object):
