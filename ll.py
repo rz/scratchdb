@@ -36,11 +36,61 @@ class LogicalLinkedList(object):
     def __init__(self):
         self._storage = MemoryStorage()
 
+    def _get_head_node(self):
+        head_address = self._storage.get_head_address()
+        if head_address == 0:
+            head = None
+        else:
+            head = self._storage.read(head_address)
+        return head
+
+    def _ll_insert(self, node, key, value_address):
+        if node is None:
+            # inserting on an empty list
+            new_node = Node(key, value_address, None)
+            new_node_address = self._storage.append(new_node)
+            return new_node_address
+
+        if key == node.key:
+            # we are updating an existing key
+            # make a new node with value_address and next_address pointing to
+            # the existing next node i.e. we can re-use the rest of the list
+            new_node = Node(key, value_address, node.next_address)
+            new_node_address = self._storage.append(new_node)
+            return new_node_address
+        else:
+            if node.next_address is None:
+                # got to the end without finding the key i.e. it's a new key
+                # first, make a new node with the value_address to serve as the
+                # new last node i.e. its next_address is None
+                new_last_node = Node(key, value_address, None)
+                new_last_node_address = self._storage.append(new_last_node)
+                # then, copy of the current node (the former last node) but
+                # point its next_address to the new last-node we just created
+                new_existing_node = Node(node.key, node.value_address, new_last_node_address)
+                new_existing_node_address = self._storage.append(new_existing_node)
+                return new_existing_node_address
+            else:
+                # recursive case
+                # we are not at the end and we haven't found the key, yet
+                # copy this node as is but point its next address to the return
+                # value of calling _ll_insert() with the next node
+                next_node = self._storage.read(node.next_address)
+                new_next_node_address = self._ll_insert(next_node, key, value_address)
+                new_node = Node(node.key, node.value_address, new_next_node_address)
+                new_node_address = self._storage.append(new_node)
+                return new_node_address
+
     def get(self, key):
         pass
 
     def set(self, key, value):
-        pass
+        vw = ValueWrapper(value)
+        value_address = self._storage.append(vw)
+        head = self._get_head_node()
+        new_head_address = self._ll_insert(head, key, value_address)
+        self._storage.set_head_address(new_head_address)
+        return new_head_address
 
     def pop(self, key):
         pass
