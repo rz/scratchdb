@@ -73,6 +73,23 @@ class LogicalLinkedList(object):
             new_node_address = self._storage.append(new_node)
         return new_node_address
 
+    def _ll_remove(self, key):
+        node, head_address = self._get_head()
+        if not self._ll_contains(key):
+            return head_address
+        # we know the key is in the list, so the break will terminate the loop
+        to_copy = []
+        while True:
+            if key == node.key:
+                break
+            to_copy.append(node)
+            node = self._storage.read(node.next_address)
+        new_node_address = node.next_address
+        for n in reversed(to_copy):
+            new_node = Node(n.key, n.value_address, next_address=new_node_address)
+            new_node_address = self._storage.append(new_node)
+        return new_node_address
+
     def get(self, key):
         node, _ = self._get_head()
         while node is not None:
@@ -93,7 +110,9 @@ class LogicalLinkedList(object):
         return new_head_address
 
     def pop(self, key):
-        pass
+        new_head_address = self._ll_remove(key)
+        self._storage.set_head_address(new_head_address)
+        return new_head_address
 
     def show(self):
         result_str = ''
@@ -134,4 +153,20 @@ if __name__ == '__main__':
     ll.show()
 
     print('get k2:', ll.get('k2'))
+
+    print('popping k2')
+    ll.pop('k2')
+    ll.show()
+
+    print('popping non-existent')
+    ll.pop('DNE')
+    ll.show()
+
+    print('popping k0 (tail)')
+    ll.pop('k0')
+    ll.show()
+
+    print('popping k4 (head)')
+    ll.pop('k4')
+    ll.show()
 
