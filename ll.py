@@ -45,6 +45,34 @@ class LogicalLinkedList(object):
             head = self._storage.read(head_address)
         return head, head_address
 
+    def _ll_contains(self, key):
+        try:
+            self.get(key)
+        except KeyError:
+            return False
+        else:
+            return True
+
+    def _ll_insert(self, key, value_address):
+        node, head_address = self._get_head()
+        if not self._ll_contains(key):
+            new_node = Node(key, value_address, next_address=head_address)
+            new_head_address = self._storage.append(new_node)
+            return new_head_address
+        # we know that the list contains the key, so the break will terminate the loop
+        to_copy = []
+        while True:
+            if key == node.key:
+                new_node = Node(key, value_address, node.next_address)
+                new_node_address = self._storage.append(new_node)
+                break
+            to_copy.append(node)
+            node = self._storage.read(node.next_address)
+        for n in reversed(to_copy):
+            new_node = Node(n.key, n.value_address, next_address=new_node_address)
+            new_node_address = self._storage.append(new_node)
+        return new_node_address
+
     def get(self, key):
         node, _ = self._get_head()
         while node is not None:
@@ -58,7 +86,11 @@ class LogicalLinkedList(object):
         raise KeyError('Not found: %s' % key)
 
     def set(self, key, value):
-        pass
+        vw = ValueWrapper(value)
+        value_address = self._storage.append(vw)
+        new_head_address = self._ll_insert(key, value_address)
+        self._storage.set_head_address(new_head_address)
+        return new_head_address
 
     def pop(self, key):
         pass
