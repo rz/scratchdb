@@ -36,8 +36,26 @@ class LogicalLinkedList(object):
     def __init__(self):
         self._storage = MemoryStorage()
 
+    def _get_head(self):
+        head_address = self._storage.get_head_address()
+        if head_address == 0:
+            head = None
+            head_address = None
+        else:
+            head = self._storage.read(head_address)
+        return head, head_address
+
     def get(self, key):
-        pass
+        node, _ = self._get_head()
+        while node is not None:
+            if key == node.key:
+                vw = self._storage.read(node.value_address)
+                return vw.value
+            if node.next_address is None:
+                node = None
+            else:
+                node = self._storage.read(node.next_address)
+        raise KeyError('Not found: %s' % key)
 
     def set(self, key, value):
         pass
